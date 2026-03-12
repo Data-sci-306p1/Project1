@@ -1,6 +1,6 @@
 ---
 title: "Project 1"
-author: "GROUP MEMBERS"
+author: "Dane Jorgensen, Jack Hubbard, Ali Rahman"
 output: html_document
 ---
 

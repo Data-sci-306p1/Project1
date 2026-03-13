@@ -29,11 +29,31 @@ Your job in this project falls into two categories:
     * Call the first table `daily`: "./data/natural_gas_germany_daily.csv"
     * Call the second table `gas`: "./data/dutch_ttf_natural_gas.csv". Be sure to properly import the `Date` column.
     * Demonstrate that these have been loaded by showing the number of rows and columns in each table.
+    
+```{r}
+# Load files
+daily <- read_csv("./data/natural_gas_germany_daily.csv", show_col_types = FALSE)
+gas <- read_csv("./data/dutch_ttf_natural_gas.csv", show_col_types = FALSE)
+
+# Convert Date from char
+gas$Date <- mdy(gas$Date)
+
+# num rows/cols
+dim(gas)
+dim(daily)
+
+```
   
 
 ### Task 2
 
 * The data in `daily` are collected over days, with information on different types of natural gas consumption (`consumption_small`, `consumption_industry`, `consumption_power`). Provide summaries of typical values for each of these three types of consumption.
+
+```{r}
+daily %>%
+  select(starts_with("consumption")) %>%
+  summary()
+```
 
 
 ### Task 3
@@ -44,7 +64,7 @@ Answer some questions about the data in `daily`:
 * What is the percentage change in the `consumption_*` variables (that is the last day minus the first day divided by the first day)?
 * What proportion of the days are marked as holidays?
 * For each month in each year, what was the year-month combination with the lowest median `consumption_power` value?
-   
+
 ### Task 4
 
 * The original paper aggregated the data to monthly means for each consumption type in `daily` and the `Price` column of `gas` to produce the following image:<br/>

@@ -55,6 +55,7 @@ daily %>%
   summary()
 ```
 
+
 ### Task 3
 
 Answer some questions about the data in `daily`:
@@ -63,7 +64,7 @@ Answer some questions about the data in `daily`:
 * What is the percentage change in the `consumption_*` variables (that is the last day minus the first day divided by the first day)?
 * What proportion of the days are marked as holidays?
 * For each month in each year, what was the year-month combination with the lowest median `consumption_power` value?
- 
+
 ```{r}
 ### Number of weeks covered by the data
 daily |>
@@ -71,22 +72,24 @@ daily |>
   summarize(n_weeks = as.numeric(difftime(max(date), min(date), units = "weeks")))
 ### Percentage change in only the consumption_small variable(last day minus first day divided by first day)
 daily |>
-  summarize(pct_change_small = (last(consumption_small, na_rm = TRUE) - first(consumption_small, na_rm = TRUE)) / 
-              first(consumption_small, na_rm = TRUE) * 100,
-            pct_change_industry = (last(consumption_industry, na_rm = TRUE) - first(consumption_industry, na_rm = TRUE)) / 
-              first(consumption_industry, na_rm = TRUE) * 100,
-            pct_change_power = (last(consumption_power, na_rm = TRUE) - first(consumption_power, na_rm = TRUE)) / 
-              first(consumption_power, na_rm = TRUE) * 100)
+  summarize(pct_change_small = (last(consumption_small, na.rm = TRUE) - first(consumption_small, na.rm = TRUE)) / 
+              first(consumption_small, na.rm = TRUE) * 100,
+            pct_change_industry = (last(consumption_industry, na.rm = TRUE) - first(consumption_industry, na.rm = TRUE)) / 
+              first(consumption_industry, na.rm = TRUE) * 100,
+            pct_change_power = (last(consumption_power, na.rm = TRUE) - first(consumption_power, na.rm = TRUE)) / 
+              first(consumption_power, na.rm = TRUE) * 100)
 ### Proportion of days marked as holidays
 daily |>
   summarize(holiday_proportion = mean(holiday))
 ### Year-month combination with lowest median consumption_power value
 daily |>
   group_by(year = year(date), month = month(date)) |>
-  summarize(median_consumption_power = median(consumption_power, na_rm = TRUE)) |>
+  summarize(median_consumption_power = median(consumption_power, na.rm = TRUE)) |>
   arrange(median_consumption_power) |>
   slice(1)
 ```  
+
+
 ### Task 4
 
 * The original paper aggregated the data to monthly means for each consumption type in `daily` and the `Price` column of `gas` to produce the following image:<br/>
@@ -104,7 +107,7 @@ gas_monthly <- gas |> mutate(month = floor_date(Date, "month"))
 daily_mean <- daily_monthly |> group_by(month)|> summarise(
    mean_consumption_small = mean(consumption_small, na.rm = TRUE),
     mean_consumption_industry = mean(consumption_industry, na.rm = TRUE),
-    mean_consumption_power = mean(consumption_power, na.rm = TRUE),
+    mean_consumption_power = mean(consumption_power, na.rm = TRUE)
 )
 
 ##Calculate "gas" means in monthly terms
@@ -123,17 +126,50 @@ ggplot(gas_mean, aes(x = month, y = mean_price)) +
 ### Task 5
 
 * Write a predicate function that returns true if any value in vector is missing. Use this function to find columns with missing values in the `daily` column. Create a plot or table that shows how often patterns of missingness occur: are all of the missing values in the same rows or are the various columns missing data in different ways?
+```{r}
+# Predicate function to check for missing values
+has_missing <- function(x) {
+  any(is.na(x))
+}
 
+# Create a table to show the count of missing values in each column
+missing_counts <- sapply(daily, function(x) sum(is.na(x)))
+missing_table <- data.frame(MissingCount = missing_counts)
+missing_table
 
+missing_pattern <- daily %>%
+  select(where(has_missing)) %>%
+  mutate(row_id = row_number()) %>%
+  pivot_longer(cols = -row_id, names_to = "column", values_to = "value") %>%
+  filter(is.na(value))
+missing_pattern_summary <- missing_pattern %>%
+  group_by(row_id) %>%
+  summarize(missing_columns = n()) %>%
+  count(missing_columns)
+missing_pattern_summary
+```
 
 ### Task 6
 
 * Limit the `gas` table to days where the price exceeded the yearly median. Use the concept of [circular means](https://en.wikipedia.org/wiki/Circular_mean) to compute the average day of the year when price exceeds the yearly median price. The `yday` function will likely be useful here. 
 
+```{r}
+# calculate yearly median
+gas <- gas |>
+  group_by(year = year(Date)) |>
+  mutate(median_price = median(Price, na.rm = TRUE))
+gas <- gas |>
+  filter(Price > median_price)
+gas <- gas |>
+  mutate(day_of_year = yday(Date))
+# calculate circular mean
+## TO-DO
+```
 
 ### Task 7
 
 * Using the cut function, create two nominal variables from quantitative data in the `daily` dataset. Use these groups to summarize the data. Use arrange to show the smallest or largest values in these comparisons.
+
 
 ### Task 8
 

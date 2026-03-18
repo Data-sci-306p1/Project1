@@ -220,6 +220,94 @@ idx_data |>
     * A plot using `facet_wrap` or `facet_grid`
     * A plot that shows seasonal effects before the crisis (September 2021 until October 2022)
     
+    ```{r}
+    # Plot 1: Marginal Distribution of TTF Price
+ggplot(gas, aes(x = Price)) +
+  geom_histogram(binwidth = 10, fill = "steelblue", color = "black") +
+  labs(
+    title = "Marginal Distribution of Dutch TTF Natural Gas Prices",
+    x = "Price (€/MWh)", 
+    y = "Frequency"
+  ) +
+  theme_minimal()
+    ```
+
+Explanation: This histogram shows the marginal distribution of the Dutch TTF Natural Gas prices over the dataset's timeframe. The distribution is heavily right-skewed, indicating that while gas prices typically hover in the lower range (under 50 €/MWh), the 2022 energy crisis caused extreme, albeit less frequent, price spikes that push the tail far to the right.
+
+```{r}
+# Plot 2: Joint Distribution of Small vs. Industry Consumption
+ggplot(daily, aes(x = consumption_small, y = consumption_industry)) +
+  geom_point(alpha = 0.5, color = "darkorange") +
+  labs(
+    title = "Joint Distribution: Household vs. Industry Gas Consumption",
+    x = "Small/Household Consumption", 
+    y = "Industry Consumption"
+  ) +
+  theme_minimal()
+```
+
+
+Explanation: This scatterplot visualizes the joint distribution between household (consumption_small) and industrial (consumption_industry) natural gas consumption. The lack of a tight, linear cluster suggests that industrial consumption is relatively inelastic and steady year-round, whereas household consumption varies wildly (likely driven by winter heating), meaning the two sectors do not move in perfect lockstep.
+
+```{r}
+# Plot 3: Conditional Mean of Power Consumption by Weekday
+daily |>
+  mutate(day_of_week = wday(date, label = TRUE)) |>
+  group_by(day_of_week) |>
+  summarize(mean_power = mean(consumption_power, na.rm = TRUE)) |>
+  ggplot(aes(x = day_of_week, y = mean_power)) +
+  geom_col(fill = "forestgreen") +
+  labs(
+    title = "Average Power Station Gas Consumption by Day of the Week",
+    x = "Day of the Week", 
+    y = "Mean Consumption"
+  ) +
+  theme_minimal()
+```
+
+
+
+Explanation: This bar chart displays the conditional mean of gas consumption by power stations, grouped by the day of the week. The plot reveals a clear weekly seasonality: power stations consume noticeably less natural gas on Saturdays and Sundays compared to weekdays, aligning with standard lulls in commercial and industrial business operations.
+
+```{r}
+# Plot 4: Faceted Line Plot of Monthly Industry Consumption
+daily |>
+  mutate(year = year(date), month = month(date, label = TRUE)) |>
+  group_by(year, month) |>
+  summarize(mean_industry = mean(consumption_industry, na.rm = TRUE), .groups = "drop") |>
+  ggplot(aes(x = month, y = mean_industry, group = 1)) +
+  geom_line(color = "purple", linewidth = 1) +
+  facet_wrap(~ year, ncol = 1) +
+  labs(
+    title = "Monthly Industrial Gas Consumption Over Time",
+    x = "Month", 
+    y = "Mean Consumption"
+  ) +
+  theme_minimal()
+```
+
+
+Explanation: By faceting the average monthly industrial consumption by year, we can directly compare the shapes of the demand curves. The plot clearly shows that as the crisis deepened in 2022, the overall baseline of industrial consumption shifted downwards compared to previous years, reflecting the industry's response to supply constraints and price surges.
+
+
+```{r}
+# Plot 5: Seasonal Effects (Sept 2021 to Oct 2022)
+daily |>
+  filter(date >= "2021-09-01" & date <= "2022-10-31") |>
+  ggplot(aes(x = date, y = consumption_small)) +
+  geom_line(color = "firebrick", alpha = 0.7) +
+  geom_smooth(se = FALSE, color = "black", linetype = "dashed", method = "loess") +
+  labs(
+    title = "Household Gas Consumption During the Energy Crisis",
+    subtitle = "September 2021 to October 2022",
+    x = "Date", 
+    y = "Household Consumption"
+  ) +
+  theme_minimal()
+```
+
+
+Explanation: This line chart isolates household gas consumption from the start of the crisis in September 2021 through October 2022, with a trend line added to highlight the underlying pattern. It perfectly illustrates the intense seasonal wave of natural gas dependency for heating, peaking in the dead of winter (Jan/Feb) and bottoming out in the summer months, regardless of the ongoing geopolitical crisis.
 
 ### Objective 2
 ```{r}

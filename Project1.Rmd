@@ -65,6 +65,30 @@ Answer some questions about the data in `daily`:
 * What proportion of the days are marked as holidays?
 * For each month in each year, what was the year-month combination with the lowest median `consumption_power` value?
 
+```{r}
+### Number of weeks covered by the data
+daily |>
+  select(date) |>
+  summarize(n_weeks = as.numeric(difftime(max(date), min(date), units = "weeks")))
+### Percentage change in only the consumption_small variable(last day minus first day divided by first day)
+daily |>
+  summarize(pct_change_small = (last(consumption_small, na_rm = TRUE) - first(consumption_small, na_rm = TRUE)) / 
+              first(consumption_small, na_rm = TRUE) * 100,
+            pct_change_industry = (last(consumption_industry, na_rm = TRUE) - first(consumption_industry, na_rm = TRUE)) / 
+              first(consumption_industry, na_rm = TRUE) * 100,
+            pct_change_power = (last(consumption_power, na_rm = TRUE) - first(consumption_power, na_rm = TRUE)) / 
+              first(consumption_power, na_rm = TRUE) * 100)
+### Proportion of days marked as holidays
+daily |>
+  summarize(holiday_proportion = mean(holiday))
+### Year-month combination with lowest median consumption_power value
+daily |>
+  group_by(year = year(date), month = month(date)) |>
+  summarize(median_consumption_power = median(consumption_power, na_rm = TRUE)) |>
+  arrange(median_consumption_power) |>
+  slice(1)
+```
+
 ### Task 4
 
 * The original paper aggregated the data to monthly means for each consumption type in `daily` and the `Price` column of `gas` to produce the following image:<br/>
@@ -74,17 +98,50 @@ Produce plots that show the same information that is presented in this plot. You
 ### Task 5
 
 * Write a predicate function that returns true if any value in vector is missing. Use this function to find columns with missing values in the `daily` column. Create a plot or table that shows how often patterns of missingness occur: are all of the missing values in the same rows or are the various columns missing data in different ways?
+```{r}
+# Predicate function to check for missing values
+has_missing <- function(x) {
+  any(is.na(x))
+}
 
+# Create a table to show the count of missing values in each column
+missing_counts <- sapply(daily, function(x) sum(is.na(x)))
+missing_table <- data.frame(MissingCount = missing_counts)
+missing_table
 
+missing_pattern <- daily %>%
+  select(where(has_missing)) %>%
+  mutate(row_id = row_number()) %>%
+  pivot_longer(cols = -row_id, names_to = "column", values_to = "value") %>%
+  filter(is.na(value))
+missing_pattern_summary <- missing_pattern %>%
+  group_by(row_id) %>%
+  summarize(missing_columns = n()) %>%
+  count(missing_columns)
+missing_pattern_summary
+```
 
 ### Task 6
 
 * Limit the `gas` table to days where the price exceeded the yearly median. Use the concept of [circular means](https://en.wikipedia.org/wiki/Circular_mean) to compute the average day of the year when price exceeds the yearly median price. The `yday` function will likely be useful here. 
 
+```{r}
+# calculate yearly median
+gas <- gas |>
+  group_by(year = year(Date)) |>
+  mutate(median_price = median(Price, na_rm = TRUE))
+gas <- gas |>
+  filter(Price > median_price)
+gas <- gas |>
+  mutate(day_of_year = yday(Date))
+# calculate circular mean
+## TO-DO
+```
 
 ### Task 7
 
 * Using the cut function, create two nominal variables from quantitative data in the `daily` dataset. Use these groups to summarize the data. Use arrange to show the smallest or largest values in these comparisons.
+
 
 ### Task 8
 

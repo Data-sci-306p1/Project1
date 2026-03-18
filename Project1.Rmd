@@ -246,7 +246,7 @@ ggplot(daily, aes(x = consumption_small, y = consumption_industry)) +
   theme_minimal()
 ```
 
-
+ 
 Explanation: This scatterplot visualizes the joint distribution between household (consumption_small) and industrial (consumption_industry) natural gas consumption. The lack of a tight, linear cluster suggests that industrial consumption is relatively inelastic and steady year-round, whereas household consumption varies wildly (likely driven by winter heating), meaning the two sectors do not move in perfect lockstep.
 
 ```{r}

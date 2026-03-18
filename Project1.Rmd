@@ -29,12 +29,31 @@ Your job in this project falls into two categories:
     * Call the first table `daily`: "./data/natural_gas_germany_daily.csv"
     * Call the second table `gas`: "./data/dutch_ttf_natural_gas.csv". Be sure to properly import the `Date` column.
     * Demonstrate that these have been loaded by showing the number of rows and columns in each table.
+    
+```{r}
+# Load files
+daily <- read_csv("./data/natural_gas_germany_daily.csv", show_col_types = FALSE)
+gas <- read_csv("./data/dutch_ttf_natural_gas.csv", show_col_types = FALSE)
+
+# Convert Date from char
+gas$Date <- mdy(gas$Date)
+
+# num rows/cols
+dim(gas)
+dim(daily)
+
+```
   
 
 ### Task 2
 
 * The data in `daily` are collected over days, with information on different types of natural gas consumption (`consumption_small`, `consumption_industry`, `consumption_power`). Provide summaries of typical values for each of these three types of consumption.
 
+```{r}
+daily %>%
+  select(starts_with("consumption")) %>%
+  summary()
+```
 
 ### Task 3
 
@@ -44,12 +63,62 @@ Answer some questions about the data in `daily`:
 * What is the percentage change in the `consumption_*` variables (that is the last day minus the first day divided by the first day)?
 * What proportion of the days are marked as holidays?
 * For each month in each year, what was the year-month combination with the lowest median `consumption_power` value?
-   
+ 
+```{r}
+### Number of weeks covered by the data
+daily |>
+  select(date) |>
+  summarize(n_weeks = as.numeric(difftime(max(date), min(date), units = "weeks")))
+### Percentage change in only the consumption_small variable(last day minus first day divided by first day)
+daily |>
+  summarize(pct_change_small = (last(consumption_small, na_rm = TRUE) - first(consumption_small, na_rm = TRUE)) / 
+              first(consumption_small, na_rm = TRUE) * 100,
+            pct_change_industry = (last(consumption_industry, na_rm = TRUE) - first(consumption_industry, na_rm = TRUE)) / 
+              first(consumption_industry, na_rm = TRUE) * 100,
+            pct_change_power = (last(consumption_power, na_rm = TRUE) - first(consumption_power, na_rm = TRUE)) / 
+              first(consumption_power, na_rm = TRUE) * 100)
+### Proportion of days marked as holidays
+daily |>
+  summarize(holiday_proportion = mean(holiday))
+### Year-month combination with lowest median consumption_power value
+daily |>
+  group_by(year = year(date), month = month(date)) |>
+  summarize(median_consumption_power = median(consumption_power, na_rm = TRUE)) |>
+  arrange(median_consumption_power) |>
+  slice(1)
+```  
 ### Task 4
 
 * The original paper aggregated the data to monthly means for each consumption type in `daily` and the `Price` column of `gas` to produce the following image:<br/>
 ![Original consumption by month graph](proj1fig1.png)<br/>
-Produce plots that show the same information that is presented in this plot. Your plots do not have to have the same colors or markings, but we should be able to use them to compare the trends for the three price variables. 
+Produce plots that show the same information that is presented in this plot. Your plots do not have to have the same colors or markings, but we should be able to use them to compare the trends for the three price variables.
+
+
+
+```{r}
+##Convert the data into monthly variables
+daily_monthly <- daily |> mutate(month = floor_date(date, "month"))
+gas_monthly <- gas |> mutate(month = floor_date(Date, "month"))
+
+##Calculate "daily" means in monthly terms
+daily_mean <- daily_monthly |> group_by(month)|> summarise(
+   mean_consumption_small = mean(consumption_small, na.rm = TRUE),
+    mean_consumption_industry = mean(consumption_industry, na.rm = TRUE),
+    mean_consumption_power = mean(consumption_power, na.rm = TRUE),
+)
+
+##Calculate "gas" means in monthly terms
+gas_mean <- gas_monthly |> group_by(month) |> summarise(mean_price = mean(Price, na.rm = TRUE))
+
+##Plotting TTF Price, Not sure how to show both TTF price and the gas price indexes on
+##one graph because they are on two separate scales
+ggplot(gas_mean, aes(x = month, y = mean_price)) +
+  geom_line(color = "blue") +
+  labs(title = "Natural Gas Price TTf By Time", x = "Date", y = "Price (€/MWh)")
+
+
+```
+
 
 ### Task 5
 

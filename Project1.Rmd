@@ -82,7 +82,7 @@ daily |>
 ### Year-month combination with lowest median consumption_power value
 daily |>
   group_by(year = year(date), month = month(date)) |>
-  summarize(median_consumption_power = median(consumption_power, na.rm = TRUE)) |>
+  summarize(median_consumption_power = median(consumption_power, na.rm = TRUE), .groups = "drop") |>
   arrange(median_consumption_power) |>
   slice(1)
 ```
@@ -215,12 +215,110 @@ idx_data |>
 
 ### Objective 1
 
+<<<<<<< HEAD
 -   Produce at least five more figures. For each figure, write a brief caption explaining the plot and what you have learned from the plot. Each figure should attempt to provide new insight into the data set not included elsewhere
     -   A marginal distribution
     -   A joint distribution
     -   A plot of a summary measure such as a conditional mean
     -   A plot using `facet_wrap` or `facet_grid`
     -   A plot that shows seasonal effects before the crisis (September 2021 until October 2022)
+=======
+* Produce at least five more figures. For each figure, write a brief caption explaining the plot and what you have learned from the plot. Each figure should attempt to provide new insight into the data set not included elsewhere
+    * A marginal distribution
+    * A joint distribution
+    * A plot of a summary measure such as a conditional mean
+    * A plot using `facet_wrap` or `facet_grid`
+    * A plot that shows seasonal effects before the crisis (September 2021 until October 2022)
+    
+    ```{r}
+    # Plot 1: Marginal Distribution of TTF Price
+ggplot(gas, aes(x = Price)) +
+  geom_histogram(binwidth = 10, fill = "steelblue", color = "black") +
+  labs(
+    title = "Marginal Distribution of Dutch TTF Natural Gas Prices",
+    x = "Price (€/MWh)", 
+    y = "Frequency"
+  ) +
+  theme_minimal()
+    ```
+
+Explanation: This histogram shows the marginal distribution of the Dutch TTF Natural Gas prices over the dataset's timeframe. The distribution is heavily right-skewed, indicating that while gas prices typically hover in the lower range (under 50 €/MWh), the 2022 energy crisis caused extreme, although less frequent, price spikes that push the tail far to the right.
+
+```{r}
+# Plot 2: Joint Distribution of Small vs. Industry Consumption
+ggplot(daily, aes(x = consumption_small, y = consumption_industry)) +
+  geom_point(alpha = 0.5, color = "darkorange") +
+  labs(
+    title = "Joint Distribution: Household vs. Industry Gas Consumption",
+    x = "Small/Household Consumption", 
+    y = "Industry Consumption"
+  ) +
+  theme_minimal()
+```
+
+ 
+Explanation: This scatterplot visualizes the joint distribution between household (consumption_small) and industrial (consumption_industry) natural gas consumption. The lack of a tight, linear cluster suggests that industrial consumption is relatively inelastic and steady year-round, whereas household consumption varies wildly (likely driven by winter heating), meaning the two sectors do not move in perfect lockstep.
+
+```{r}
+# Plot 3: Conditional Mean of Power Consumption by Weekday
+daily |>
+  mutate(day_of_week = wday(date, label = TRUE)) |>
+  group_by(day_of_week) |>
+  summarize(mean_power = mean(consumption_power, na.rm = TRUE)) |>
+  ggplot(aes(x = day_of_week, y = mean_power)) +
+  geom_col(fill = "forestgreen") +
+  labs(
+    title = "Average Power Station Gas Consumption by Day of the Week",
+    x = "Day of the Week", 
+    y = "Mean Consumption"
+  ) +
+  theme_minimal()
+```
+
+
+
+Explanation: This bar chart displays the conditional mean of gas consumption by power stations, grouped by the day of the week. The plot reveals a clear weekly seasonality: power stations consume noticeably less natural gas on Saturdays and Sundays compared to weekdays, aligning with standard lulls in commercial and industrial business operations.
+
+```{r}
+# Plot 4: Faceted Line Plot of Monthly Industry Consumption
+daily |>
+  mutate(year = year(date), month = month(date, label = TRUE)) |>
+  group_by(year, month) |>
+  summarize(mean_industry = mean(consumption_industry, na.rm = TRUE), .groups = "drop") |>
+  ggplot(aes(x = month, y = mean_industry, group = 1)) +
+  geom_line(color = "purple", linewidth = 1) +
+  facet_wrap(~ year, ncol = 1) +
+  labs(
+    title = "Monthly Industrial Gas Consumption Over Time",
+    x = "Month", 
+    y = "Mean Consumption"
+  ) +
+  theme_minimal()
+```
+
+
+Explanation: By faceting the average monthly industrial consumption by year, we can directly compare the shapes of the demand curves. The plot clearly shows that as the crisis deepened in 2022, the overall baseline of industrial consumption shifted downwards compared to previous years, reflecting the industry's response to supply constraints and price surges.
+
+   
+```{r}
+# Plot 5: Seasonal Effects (Sept 2021 to Oct 2022)
+daily |>
+  filter(date >= "2021-09-01" & date <= "2022-10-31") |>
+  ggplot(aes(x = date, y = consumption_small)) +
+  geom_line(color = "firebrick", alpha = 0.7) +
+  geom_smooth(se = FALSE, color = "black", linetype = "dashed", method = "loess") +
+  labs(
+    title = "Household Gas Consumption During the Energy Crisis",
+    subtitle = "September 2021 to October 2022",
+    x = "Date", 
+    y = "Household Consumption"
+  ) +
+  theme_minimal()
+```
+
+
+Explanation: This line chart isolates household gas consumption from the start of the crisis in September 2021 through October 2022, with a trend line added to highlight the underlying pattern. It perfectly illustrates the intense seasonal wave of natural gas dependency for heating, peaking in the dead of winter (Jan/Feb) and bottoming out in the summer months, regardless of the ongoing geopolitical crisis.
+>>>>>>> cdf1e1d42471ef537877f502095f454ad42a2d3f
 
 ### Objective 2
 
@@ -231,12 +329,48 @@ colnames(daily)
 -   Compare and contrast holidays and non-holidays for household energy consumption. Select 3 ways of comparing these groups. Provide at least one graph.
 
 ```{r}
-daily |>
+# Calculate Mean, Median, and Standard Deviation for both groups
+holiday_stats <- daily |>
   group_by(holiday) |>
-  summarize(mean_consumption_small = mean(consumption_small, na.rm = TRUE),
-            mean_price_households_idx = mean(price_households_idx, na.rm = TRUE))
+  summarize(
+    mean_consumption = mean(consumption_small, na.rm = TRUE),
+    median_consumption = median(consumption_small, na.rm = TRUE),
+    sd_consumption = sd(consumption_small, na.rm = TRUE)
+  )
+
+print(holiday_stats)
+
+# Visual comparison using a Boxplot
+ggplot(daily, aes(x = factor(holiday, labels = c("Non-Holiday", "Holiday")), 
+                  y = consumption_small, 
+                  fill = factor(holiday))) +
+  geom_boxplot(alpha = 0.7) +
+  scale_fill_manual(values = c("#4C72B0", "#C44E52")) + # Clean, professional colors
+  labs(
+    title = "Distribution of Household Gas Consumption: Holidays vs. Regular Days",
+    x = "Type of Day",
+    y = "Household Consumption"
+  ) +
+  theme_minimal() +
+  theme(legend.position = "none")
 ```
 
+<<<<<<< HEAD
+=======
+
+
+We compared household gas consumption on holidays versus non-holidays using three different statistical methods to get a complete picture of how days off impact energy use:
+
+1. Comparison of Means: The average household consumption on regular, non-holiday days is 1.07, while holidays average slightly lower at 1.04. This gives us the "big picture" showing that total gas usage actually drops a bit during holidays.
+
+2. Comparison of Medians: Since extreme weather events can easily skew the average, we looked at the median to see what a typical day looks like. The median for regular days is 0.902, compared to 0.843 for holidays. This confirms that on a normal day, households use less gas on holidays. A logical explanation for this is that people often travel or gather together in fewer homes during holidays, reducing the overall number of houses running their heating systems at full blast.
+
+3. Comparison of Variability (Standard Deviation): Finally, we measured the spread of the data. The standard deviation for regular days is 0.762, compared to a lower 0.685 on holidays. As seen in the provided boxplot, the interquartile range (the middle 50% of the data, represented by the colored boxes) for regular days is wider and stretches higher than for holidays. This indicates that household consumption is more volatile and prone to extreme spikes on regular workdays, whereas holiday usage is more stable and constrained to a tighter range.
+
+
+
+
+>>>>>>> cdf1e1d42471ef537877f502095f454ad42a2d3f
 ### Objective 3
 
 -   According to the paper, the gas crisis occurred between September 2021 until October 2022. Compare this period with the periods before and after on household and industrial consumption. Write a paragraph explaining your findings.
@@ -261,9 +395,79 @@ daily |>
 
 -   Explore the [documentation for ggplot](https://ggplot2.tidyverse.org/). Select one geometry and one `stat_` function we have not used before or use an option to a previously used geometry/stat with a new option. Write a short paragraph explaining what the plots show.
 
+
+```{r}
+# Create a plot using a new geometry (geom_violin) and a new stat (stat_summary)
+daily |>
+  # Convert the date into an ordered categorical month for clean grouping
+  mutate(month_label = month(date, label = TRUE)) |>
+  ggplot(aes(x = month_label, y = consumption_small, fill = month_label)) +
+  # New Geometry: geom_violin shows the probability density (shape) of the data
+  geom_violin(alpha = 0.6, trim = FALSE, color = "darkgray") +
+  # New Stat: stat_summary calculates a metric (mean) directly on the plot layer
+  stat_summary(
+    fun = mean, 
+    geom = "point", 
+    shape = 23, 
+    size = 2.5, 
+    fill = "white", 
+    color = "black"
+  ) +
+  labs(
+    title = "Monthly Distribution of Household Gas Consumption",
+    subtitle = "Continuous probability densities with overlaid conditional means",
+    x = "Month",
+    y = "Household Consumption"
+  ) +
+  theme_minimal() +
+  theme(legend.position = "none")
+```
+
+
+
+For this objective, I explored geom_violin() and paired it with stat_summary(). When analyzing feature distributions, understanding the continuous probability density is often more informative than looking at flat quartiles. geom_violin() plots the continuous distribution of household consumption for each month, effectively mirroring a density plot on its side. This is highly useful for identifying bimodal distributions or heavy tails that a standard boxplot would completely hide.
+
+To enhance the geometry, I used stat_summary(). Instead of pre-computing the vector aggregations using dplyr and piping them in, stat_summary() calculates the conditional mean on the fly during the rendering process and overlays it onto the violins (represented by the white diamonds). Together, these functions provide a comprehensive view of both the underlying shape of the data and its central tendency across the shifting seasons.
+
+
+
 ### Objective 4
 
+<<<<<<< HEAD
 -   Investigate solar radiation's marginal distribution and also it's relationship with temperature.
+=======
+* Investigate solar radiation's marginal distribution and also it's relationship with temperature.
+
+```{r}
+# Plot 1: Marginal Distribution of Solar Radiation
+ggplot(daily, aes(x = solar_radiation)) +
+  geom_histogram(fill = "goldenrod", color = "black", bins = 30) +
+  labs(
+    title = "Marginal Distribution of Solar Radiation",
+    x = "Solar Radiation",
+    y = "Frequency"
+  ) +
+  theme_minimal()
+
+# Plot 2: Relationship between Solar Radiation and Temperature
+ggplot(daily, aes(x = temperature, y = solar_radiation)) +
+  geom_point(alpha = 0.5, color = "darkorange") +
+  # Adding a trend line to make the relationship completely obvious
+  geom_smooth(method = "lm", color = "blue", se = FALSE, linetype = "dashed") +
+  labs(
+    title = "Relationship Between Temperature and Solar Radiation",
+    x = "Temperature",
+    y = "Solar Radiation"
+  ) +
+  theme_minimal()
+```
+
+
+To fully investigate solar radiation, I did it in two separate parts. First, I looked at the marginal distribution of solar radiation using a histogram. The distribution is heavily right-skewed, meaning that for the vast majority of the days in the dataset, solar radiation is relatively low, with only a few days reaching extreme highs during peak summer.
+
+Next, I used a scatterplot to explore how solar radiation interacts with daily temperature. As expected, there is a clear positive correlation between the two variables, which I highlighted by adding a linear trend line. While temperature is influenced by broader weather systems, the plot confirms that days with higher solar radiation generally experience higher temperatures, showcasing the direct impact of sunlight on the region's climate.
+
+>>>>>>> cdf1e1d42471ef537877f502095f454ad42a2d3f
 
 ### Objective 5
 
@@ -284,9 +488,23 @@ daily |>
 ```
 > Looking at these data, we can see that mean household consumption (pictured in blue) stays nearly constant throughout every day of the week. Mean consumption for industry (pictured in red) is consistently the highest, but there are some notable decreases on Saturday and Sunday. Likewise, for power (pictured in green), with the smallest mean consumption, there are also decreases on Saturday and Sunday. This would make sense, as many businesses are closed on the weekends, and the steadiness of household consumption is expected as people are home all week.
 
+
 ### Objective 6
 
 -   Based on your exploration of the data, suggest three questions that could be asked from these data or additional data that you can imagine. Be sure to explain why the previous plots or calculations indicates that this would be an interesting our useful exploration.
+
+1 - Can we build a reliable predictive model to forecast daily household gas consumption based strictly on environmental and calendar features?
+
+In Objective 2, we proved that calendar events (holidays vs. regular days) significantly impact consumption volatility. In Objective 4, we saw clear relationships between weather features like solar radiation and temperature. It would be a highly useful next step to feed these features into a machine learning model to see if we can reliably predict demand, which is crucial for grid stability during a crisis.
+
+2 - Did the industrial sector's response to the crisis disproportionately affect certain sub-sectors, and can we model a more ethical/balanced distribution of resources for future crises?
+
+In Objective 1, our joint distribution plot showed that household and industrial consumption do not move in lockstep, and our faceted plot showed a massive baseline drop in industrial use during 2022. It would be valuable to bring in additional data on specific manufacturing plant closures or job losses to see who bore the brunt of this drop, and use that to model fairer energy rationing policies in the future.
+
+3 - How long is the "lag time" between a spike in the Dutch TTF Natural Gas price and a drop in actual consumer or industrial usage?
+
+We looked at the extreme right-skewed price spikes in the TTF market (Objective 1, Plot 1), but our current analysis looks at consumption and price on the exact same day. Realistically, consumers and factories take time to adjust their behavior to billing hikes. Shifting the data to analyze time-lagged correlations would reveal exactly how many days or weeks it takes for a price shock to actually force people to turn their heat off.
+
 
 ### Objective 7
 

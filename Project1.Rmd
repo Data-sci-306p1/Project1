@@ -72,12 +72,12 @@ daily |>
   summarize(n_weeks = as.numeric(difftime(max(date), min(date), units = "weeks")))
 ### Percentage change in only the consumption_small variable(last day minus first day divided by first day)
 daily |>
-  summarize(pct_change_small = (last(consumption_small, na.rm = TRUE) - first(consumption_small, na.rm = TRUE)) / 
-              first(consumption_small, na.rm = TRUE) * 100,
-            pct_change_industry = (last(consumption_industry, na.rm = TRUE) - first(consumption_industry, na.rm = TRUE)) / 
-              first(consumption_industry, na.rm = TRUE) * 100,
-            pct_change_power = (last(consumption_power, na.rm = TRUE) - first(consumption_power, na.rm = TRUE)) / 
-              first(consumption_power, na.rm = TRUE) * 100)
+  summarize(pct_change_small = (last(consumption_small, na_rm = TRUE) - first(consumption_small, na_rm = TRUE)) / 
+              first(consumption_small, na_rm = TRUE) * 100,
+            pct_change_industry = (last(consumption_industry, na_rm = TRUE) - first(consumption_industry, na_rm = TRUE)) / 
+              first(consumption_industry, na_rm = TRUE) * 100,
+            pct_change_power = (last(consumption_power, na_rm = TRUE) - first(consumption_power, na_rm = TRUE)) / 
+              first(consumption_power, na_rm = TRUE) * 100)
 ### Proportion of days marked as holidays
 daily |>
   summarize(holiday_proportion = mean(holiday))
@@ -163,7 +163,7 @@ gas <- gas |>
 gas <- gas |>
   mutate(day_of_year = yday(Date))
 # calculate circular mean
-## TO-DO
+# TO-DO
 ```
 ### Task 7
 
@@ -193,7 +193,21 @@ daily |>
 ### Task 8
 
 * There are several variables that pull out data by different industry (the `_idx` columns). Create a table for these columns using `select` and the `ends_with` function. Provide two different plots that show of the relations between these variables (you do not need to have all variables in each plot).
+```{r}
+idx_data <- daily |>
+  select(ends_with("_idx"))
+idx_data |>
+  ggplot(aes(x = price_households_idx, y = price_industry_idx)) +
+  geom_point() +
+  geom_smooth() +
+  labs(title = "Price Index for Households vs Industry", x = "Households Price Index", y = "Industry Price Index")
 
+idx_data |>
+  ggplot(aes(x = manufacturing_idx, y = hospitality_idx)) +
+  geom_point() +
+  geom_smooth() +
+  labs(title = "Manufacturing vs Hospitality Price Index", x = "Manufacturing Price Index", y = "Hospitality Price Index")
+```
 
 ## Objectives
 

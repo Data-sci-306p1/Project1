@@ -365,9 +365,74 @@ We compared household gas consumption on holidays versus non-holidays using thre
 
 * Explore the [documentation for ggplot](https://ggplot2.tidyverse.org/). Select one geometery and one `stat_` function we have not used before or use an option to a previously used geometry/stat with a new option. Write a short paragraph explaining what the plots show. 
 
+
+```{r}
+# Create a plot using a new geometry (geom_violin) and a new stat (stat_summary)
+daily |>
+  # Convert the date into an ordered categorical month for clean grouping
+  mutate(month_label = month(date, label = TRUE)) |>
+  ggplot(aes(x = month_label, y = consumption_small, fill = month_label)) +
+  # New Geometry: geom_violin shows the probability density (shape) of the data
+  geom_violin(alpha = 0.6, trim = FALSE, color = "darkgray") +
+  # New Stat: stat_summary calculates a metric (mean) directly on the plot layer
+  stat_summary(
+    fun = mean, 
+    geom = "point", 
+    shape = 23, 
+    size = 2.5, 
+    fill = "white", 
+    color = "black"
+  ) +
+  labs(
+    title = "Monthly Distribution of Household Gas Consumption",
+    subtitle = "Continuous probability densities with overlaid conditional means",
+    x = "Month",
+    y = "Household Consumption"
+  ) +
+  theme_minimal() +
+  theme(legend.position = "none")
+```
+
+
+
+For this objective, I explored geom_violin() and paired it with stat_summary(). When analyzing feature distributions, understanding the continuous probability density is often more informative than looking at flat quartiles. geom_violin() plots the continuous distribution of household consumption for each month, effectively mirroring a density plot on its side. This is highly useful for identifying bimodal distributions or heavy tails that a standard boxplot would completely hide.
+
+To enhance the geometry, I used stat_summary(). Instead of pre-computing the vector aggregations using dplyr and piping them in, stat_summary() calculates the conditional mean on the fly during the rendering process and overlays it onto the violins (represented by the white diamonds). Together, these functions provide a comprehensive view of both the underlying shape of the data and its central tendency across the shifting seasons.
+
+
+
 ### Objective 4
 
 * Investigate solar radiation's marginal distribution and also it's relationship with temperature.
+
+```{r}
+# Plot 1: Marginal Distribution of Solar Radiation
+ggplot(daily, aes(x = solar_radiation)) +
+  geom_histogram(fill = "goldenrod", color = "black", bins = 30) +
+  labs(
+    title = "Marginal Distribution of Solar Radiation",
+    x = "Solar Radiation",
+    y = "Frequency"
+  ) +
+  theme_minimal()
+
+# Plot 2: Relationship between Solar Radiation and Temperature
+ggplot(daily, aes(x = temperature, y = solar_radiation)) +
+  geom_point(alpha = 0.5, color = "darkorange") +
+  # Adding a trend line to make the relationship completely obvious
+  geom_smooth(method = "lm", color = "blue", se = FALSE, linetype = "dashed") +
+  labs(
+    title = "Relationship Between Temperature and Solar Radiation",
+    x = "Temperature",
+    y = "Solar Radiation"
+  ) +
+  theme_minimal()
+```
+
+
+To fully investigate solar radiation, I did it in two separate parts. First, I looked at the marginal distribution of solar radiation using a histogram. The distribution is heavily right-skewed, meaning that for the vast majority of the days in the dataset, solar radiation is relatively low, with only a few days reaching extreme highs during peak summer.
+
+Next, I used a scatterplot to explore how solar radiation interacts with daily temperature. As expected, there is a clear positive correlation between the two variables, which I highlighted by adding a linear trend line. While temperature is influenced by broader weather systems, the plot confirms that days with higher solar radiation generally experience higher temperatures, showcasing the direct impact of sunlight on the region's climate.
 
 
 ### Objective 5

@@ -165,11 +165,30 @@ gas <- gas |>
 # calculate circular mean
 ## TO-DO
 ```
-
 ### Task 7
 
 * Using the cut function, create two nominal variables from quantitative data in the `daily` dataset. Use these groups to summarize the data. Use arrange to show the smallest or largest values in these comparisons.
 
+```{r}
+daily <- daily |>
+  mutate(temp_group = cut(temperature, breaks = c(-Inf, 277, 288, 295, Inf), 
+                          labels = c("Cold", "Cool", "Warm", "Hot")))
+daily <- daily |>
+  mutate(solar_group = cut(solar_radiation, breaks = c(-Inf, 4.928e-11, 1.263e-10, 2.045e-10, Inf), 
+                           labels = c("Low", "Moderate", "High", "Very High")))
+daily |>
+  group_by(temp_group) |>
+  summarize(mean_consumption_small = mean(consumption_small, na.rm = TRUE),
+            mean_consumption_industry = mean(consumption_industry, na.rm = TRUE),
+            mean_consumption_power = mean(consumption_power, na.rm = TRUE)) |>
+  arrange(mean_consumption_small)
+daily |>
+  group_by(solar_group) |>
+  summarize(mean_consumption_small = mean(consumption_small, na.rm = TRUE),
+            mean_consumption_industry = mean(consumption_industry, na.rm = TRUE),
+            mean_consumption_power = mean(consumption_power, na.rm = TRUE)) |>
+  arrange(mean_consumption_small)
+```
 
 ### Task 8
 
@@ -189,9 +208,18 @@ gas <- gas |>
     
 
 ### Objective 2
+```{r}
+colnames(daily)
+```
 
 * Compare and contrast holidays and non-holidays for household energy consumption. Select 3 ways of comparing these groups. Provide at least one graph.
 
+```{r}
+daily |>
+  group_by(holiday) |>
+  summarize(mean_consumption_small = mean(consumption_small, na.rm = TRUE),
+            mean_price_households_idx = mean(price_households_idx, na.rm = TRUE))
+```
 ### Objective 3
 
 * According to the paper, the gas crisis occurred between September 2021 until October 2022. Compare this period with the periods before and after on household and industrial consumption. Write a paragraph explaining your findings.

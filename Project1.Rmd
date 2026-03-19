@@ -439,9 +439,23 @@ Next, I used a scatterplot to explore how solar radiation interacts with daily t
 
 * Use `group_by` to summarize by a new feature of this data set not otherwise discussed in the tasks or objectives. What have you learned with these investigation?
 
+
 ### Objective 6
 
 * Based on your exploration of the data, suggest three questions that could be asked from these data or additional data that you can imagine. Be sure to explain why the previous plots or calculations indicates that this would be an interesting our useful exploration.
+
+1 - Can we build a reliable predictive model to forecast daily household gas consumption based strictly on environmental and calendar features?
+
+In Objective 2, we proved that calendar events (holidays vs. regular days) significantly impact consumption volatility. In Objective 4, we saw clear relationships between weather features like solar radiation and temperature. It would be a highly useful next step to feed these features into a machine learning model to see if we can reliably predict demand, which is crucial for grid stability during a crisis.
+
+2 - Did the industrial sector's response to the crisis disproportionately affect certain sub-sectors, and can we model a more ethical/balanced distribution of resources for future crises?
+
+In Objective 1, our joint distribution plot showed that household and industrial consumption do not move in lockstep, and our faceted plot showed a massive baseline drop in industrial use during 2022. It would be valuable to bring in additional data on specific manufacturing plant closures or job losses to see who bore the brunt of this drop, and use that to model fairer energy rationing policies in the future.
+
+3 - How long is the "lag time" between a spike in the Dutch TTF Natural Gas price and a drop in actual consumer or industrial usage?
+
+We looked at the extreme right-skewed price spikes in the TTF market (Objective 1, Plot 1), but our current analysis looks at consumption and price on the exact same day. Realistically, consumers and factories take time to adjust their behavior to billing hikes. Shifting the data to analyze time-lagged correlations would reveal exactly how many days or weeks it takes for a price shock to actually force people to turn their heat off.
+
 
 ### Objective 7
 

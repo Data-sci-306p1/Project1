@@ -232,7 +232,7 @@ ggplot(gas, aes(x = Price)) +
   theme_minimal()
     ```
 
-Explanation: This histogram shows the marginal distribution of the Dutch TTF Natural Gas prices over the dataset's timeframe. The distribution is heavily right-skewed, indicating that while gas prices typically hover in the lower range (under 50 €/MWh), the 2022 energy crisis caused extreme, albeit less frequent, price spikes that push the tail far to the right.
+Explanation: This histogram shows the marginal distribution of the Dutch TTF Natural Gas prices over the dataset's timeframe. The distribution is heavily right-skewed, indicating that while gas prices typically hover in the lower range (under 50 €/MWh), the 2022 energy crisis caused extreme, although less frequent, price spikes that push the tail far to the right.
 
 ```{r}
 # Plot 2: Joint Distribution of Small vs. Industry Consumption
@@ -317,11 +317,45 @@ colnames(daily)
 * Compare and contrast holidays and non-holidays for household energy consumption. Select 3 ways of comparing these groups. Provide at least one graph.
 
 ```{r}
-daily |>
+# Calculate Mean, Median, and Standard Deviation for both groups
+holiday_stats <- daily |>
   group_by(holiday) |>
-  summarize(mean_consumption_small = mean(consumption_small, na.rm = TRUE),
-            mean_price_households_idx = mean(price_households_idx, na.rm = TRUE))
+  summarize(
+    mean_consumption = mean(consumption_small, na.rm = TRUE),
+    median_consumption = median(consumption_small, na.rm = TRUE),
+    sd_consumption = sd(consumption_small, na.rm = TRUE)
+  )
+
+print(holiday_stats)
+
+# Visual comparison using a Boxplot
+ggplot(daily, aes(x = factor(holiday, labels = c("Non-Holiday", "Holiday")), 
+                  y = consumption_small, 
+                  fill = factor(holiday))) +
+  geom_boxplot(alpha = 0.7) +
+  scale_fill_manual(values = c("#4C72B0", "#C44E52")) + # Clean, professional colors
+  labs(
+    title = "Distribution of Household Gas Consumption: Holidays vs. Regular Days",
+    x = "Type of Day",
+    y = "Household Consumption"
+  ) +
+  theme_minimal() +
+  theme(legend.position = "none")
 ```
+
+
+
+We compared household gas consumption on holidays versus non-holidays using three different statistical methods to get a complete picture of how days off impact energy use:
+
+1. Comparison of Means: The average household consumption on regular, non-holiday days is 1.07, while holidays average slightly lower at 1.04. This gives us the "big picture" showing that total gas usage actually drops a bit during holidays.
+
+2. Comparison of Medians: Since extreme weather events can easily skew the average, we looked at the median to see what a typical day looks like. The median for regular days is 0.902, compared to 0.843 for holidays. This confirms that on a normal day, households use less gas on holidays. A logical explanation for this is that people often travel or gather together in fewer homes during holidays, reducing the overall number of houses running their heating systems at full blast.
+
+3. Comparison of Variability (Standard Deviation): Finally, we measured the spread of the data. The standard deviation for regular days is 0.762, compared to a lower 0.685 on holidays. As seen in the provided boxplot, the interquartile range (the middle 50% of the data, represented by the colored boxes) for regular days is wider and stretches higher than for holidays. This indicates that household consumption is more volatile and prone to extreme spikes on regular workdays, whereas holiday usage is more stable and constrained to a tighter range.
+
+
+
+
 ### Objective 3
 
 * According to the paper, the gas crisis occurred between September 2021 until October 2022. Compare this period with the periods before and after on household and industrial consumption. Write a paragraph explaining your findings.

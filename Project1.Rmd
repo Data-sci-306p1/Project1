@@ -289,7 +289,7 @@ daily |>
 
 Explanation: By faceting the average monthly industrial consumption by year, we can directly compare the shapes of the demand curves. The plot clearly shows that as the crisis deepened in 2022, the overall baseline of industrial consumption shifted downwards compared to previous years, reflecting the industry's response to supply constraints and price surges.
 
-  
+   
 ```{r}
 # Plot 5: Seasonal Effects (Sept 2021 to Oct 2022)
 daily |>

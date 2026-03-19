@@ -18,18 +18,18 @@ In the `data` directory of this project you will find the file from a paper publ
 
 Your job in this project falls into two categories:
 
-1. A set of **tasks** that your group must complete exactly
-2. A set of **objectives** that are more general in their approach.
+1.  A set of **tasks** that your group must complete exactly
+2.  A set of **objectives** that are more general in their approach.
 
 ## Tasks
 
 ### Task 1
 
-* Load two files. To work in the console, use the `Session -> Set Working Directory -> To Source File Location`.
-    * Call the first table `daily`: "./data/natural_gas_germany_daily.csv"
-    * Call the second table `gas`: "./data/dutch_ttf_natural_gas.csv". Be sure to properly import the `Date` column.
-    * Demonstrate that these have been loaded by showing the number of rows and columns in each table.
-    
+-   Load two files. To work in the console, use the `Session -> Set Working Directory -> To Source File Location`.
+    -   Call the first table `daily`: "./data/natural_gas_germany_daily.csv"
+    -   Call the second table `gas`: "./data/dutch_ttf_natural_gas.csv". Be sure to properly import the `Date` column.
+    -   Demonstrate that these have been loaded by showing the number of rows and columns in each table.
+
 ```{r}
 # Load files
 daily <- read_csv("./data/natural_gas_germany_daily.csv", show_col_types = FALSE)
@@ -43,11 +43,10 @@ dim(gas)
 dim(daily)
 
 ```
-  
 
 ### Task 2
 
-* The data in `daily` are collected over days, with information on different types of natural gas consumption (`consumption_small`, `consumption_industry`, `consumption_power`). Provide summaries of typical values for each of these three types of consumption.
+-   The data in `daily` are collected over days, with information on different types of natural gas consumption (`consumption_small`, `consumption_industry`, `consumption_power`). Provide summaries of typical values for each of these three types of consumption.
 
 ```{r}
 daily %>%
@@ -55,15 +54,14 @@ daily %>%
   summary()
 ```
 
-
 ### Task 3
 
 Answer some questions about the data in `daily`:
 
-* How many weeks do the data cover?
-* What is the percentage change in the `consumption_*` variables (that is the last day minus the first day divided by the first day)?
-* What proportion of the days are marked as holidays?
-* For each month in each year, what was the year-month combination with the lowest median `consumption_power` value?
+-   How many weeks do the data cover?
+-   What is the percentage change in the `consumption_*` variables (that is the last day minus the first day divided by the first day)?
+-   What proportion of the days are marked as holidays?
+-   For each month in each year, what was the year-month combination with the lowest median `consumption_power` value?
 
 ```{r}
 ### Number of weeks covered by the data
@@ -87,16 +85,11 @@ daily |>
   summarize(median_consumption_power = median(consumption_power, na.rm = TRUE)) |>
   arrange(median_consumption_power) |>
   slice(1)
-```  
-
+```
 
 ### Task 4
 
-* The original paper aggregated the data to monthly means for each consumption type in `daily` and the `Price` column of `gas` to produce the following image:<br/>
-![Original consumption by month graph](proj1fig1.png)<br/>
-Produce plots that show the same information that is presented in this plot. Your plots do not have to have the same colors or markings, but we should be able to use them to compare the trends for the three price variables.
-
-
+-   The original paper aggregated the data to monthly means for each consumption type in `daily` and the `Price` column of `gas` to produce the following image:<br/> ![Original consumption by month graph](proj1fig1.png)<br/> Produce plots that show the same information that is presented in this plot. Your plots do not have to have the same colors or markings, but we should be able to use them to compare the trends for the three price variables.
 
 ```{r}
 ##Convert the data into monthly variables
@@ -122,10 +115,10 @@ ggplot(gas_mean, aes(x = month, y = mean_price)) +
 
 ```
 
-
 ### Task 5
 
-* Write a predicate function that returns true if any value in vector is missing. Use this function to find columns with missing values in the `daily` column. Create a plot or table that shows how often patterns of missingness occur: are all of the missing values in the same rows or are the various columns missing data in different ways?
+-   Write a predicate function that returns true if any value in vector is missing. Use this function to find columns with missing values in the `daily` column. Create a plot or table that shows how often patterns of missingness occur: are all of the missing values in the same rows or are the various columns missing data in different ways?
+
 ```{r}
 # Predicate function to check for missing values
 has_missing <- function(x) {
@@ -151,7 +144,7 @@ missing_pattern_summary
 
 ### Task 6
 
-* Limit the `gas` table to days where the price exceeded the yearly median. Use the concept of [circular means](https://en.wikipedia.org/wiki/Circular_mean) to compute the average day of the year when price exceeds the yearly median price. The `yday` function will likely be useful here. 
+-   Limit the `gas` table to days where the price exceeded the yearly median. Use the concept of [circular means](https://en.wikipedia.org/wiki/Circular_mean) to compute the average day of the year when price exceeds the yearly median price. The `yday` function will likely be useful here.
 
 ```{r}
 # calculate yearly median
@@ -163,11 +156,19 @@ gas <- gas |>
 gas <- gas |>
   mutate(day_of_year = yday(Date))
 # calculate circular mean
-# TO-DO
+average_doy <- atan2(mean(sin(2 * pi * gas$day_of_year / 365)), mean(cos(2 * pi * gas$day_of_year / 365))) * (365 / (2 * pi))
+# convert to positive
+average_doy_pos <- 365 + average_doy
+# convert to date
+average_doy_pos_date <- as.Date(average_doy_pos, origin = "2021-01-01")
+print(average_doy_pos_date)
 ```
+
+**The average day of the year that the price exceeds the yearly median price is November 1st.**
+
 ### Task 7
 
-* Using the cut function, create two nominal variables from quantitative data in the `daily` dataset. Use these groups to summarize the data. Use arrange to show the smallest or largest values in these comparisons.
+-   Using the cut function, create two nominal variables from quantitative data in the `daily` dataset. Use these groups to summarize the data. Use arrange to show the smallest or largest values in these comparisons.
 
 ```{r}
 daily <- daily |>
@@ -192,7 +193,8 @@ daily |>
 
 ### Task 8
 
-* There are several variables that pull out data by different industry (the `_idx` columns). Create a table for these columns using `select` and the `ends_with` function. Provide two different plots that show of the relations between these variables (you do not need to have all variables in each plot).
+-   There are several variables that pull out data by different industry (the `_idx` columns). Create a table for these columns using `select` and the `ends_with` function. Provide two different plots that show off the relations between these variables (you do not need to have all variables in each plot).
+
 ```{r}
 idx_data <- daily |>
   select(ends_with("_idx"))
@@ -213,20 +215,20 @@ idx_data |>
 
 ### Objective 1
 
-* Produce at least five more figures. For each figure, write a brief caption explaining the plot and what you have learned from the plot. Each figure should attempt to provide new insight into the data set not included elsewhere
-    * A marginal distribution
-    * A joint distribution
-    * A plot of a summary measure such as a conditional mean
-    * A plot using `facet_wrap` or `facet_grid`
-    * A plot that shows seasonal effects before the crisis (September 2021 until October 2022)
-    
+-   Produce at least five more figures. For each figure, write a brief caption explaining the plot and what you have learned from the plot. Each figure should attempt to provide new insight into the data set not included elsewhere
+    -   A marginal distribution
+    -   A joint distribution
+    -   A plot of a summary measure such as a conditional mean
+    -   A plot using `facet_wrap` or `facet_grid`
+    -   A plot that shows seasonal effects before the crisis (September 2021 until October 2022)
 
 ### Objective 2
+
 ```{r}
 colnames(daily)
 ```
 
-* Compare and contrast holidays and non-holidays for household energy consumption. Select 3 ways of comparing these groups. Provide at least one graph.
+-   Compare and contrast holidays and non-holidays for household energy consumption. Select 3 ways of comparing these groups. Provide at least one graph.
 
 ```{r}
 daily |>
@@ -234,29 +236,58 @@ daily |>
   summarize(mean_consumption_small = mean(consumption_small, na.rm = TRUE),
             mean_price_households_idx = mean(price_households_idx, na.rm = TRUE))
 ```
+
 ### Objective 3
 
-* According to the paper, the gas crisis occurred between September 2021 until October 2022. Compare this period with the periods before and after on household and industrial consumption. Write a paragraph explaining your findings.
+-   According to the paper, the gas crisis occurred between September 2021 until October 2022. Compare this period with the periods before and after on household and industrial consumption. Write a paragraph explaining your findings.
 
+```{r}
+daily <- daily |>
+  mutate(crisis_period = case_when(
+    date >= as.Date("2021-09-01") & date <= as.Date("2022-10-31") ~ "Crisis",
+    date < as.Date("2021-09-01") ~ "Before Crisis",
+    date > as.Date("2022-10-31") ~ "After Crisis"
+  ))
+daily |>
+  group_by(crisis_period) |>
+  summarize(mean_consumption_small = mean(consumption_small, na.rm = TRUE),
+            mean_consumption_industry = mean(consumption_industry, na.rm = TRUE))
+
+```
+
+> Looking at the data, mean consumption for households saw a slight decrease from before the crisis to during the crisis, and there was a dramatic increase for this group moving from during the crisis to after the crisis. The mean consumption for industry shows the opposite trend, with there being a decrease in mean consumption moving from before to during the crisis, as well as after the crisis.
 
 ### Objective 4
 
-* Explore the [documentation for ggplot](https://ggplot2.tidyverse.org/). Select one geometery and one `stat_` function we have not used before or use an option to a previously used geometry/stat with a new option. Write a short paragraph explaining what the plots show. 
+-   Explore the [documentation for ggplot](https://ggplot2.tidyverse.org/). Select one geometry and one `stat_` function we have not used before or use an option to a previously used geometry/stat with a new option. Write a short paragraph explaining what the plots show.
 
 ### Objective 4
 
-* Investigate solar radiation's marginal distribution and also it's relationship with temperature.
-
+-   Investigate solar radiation's marginal distribution and also it's relationship with temperature.
 
 ### Objective 5
 
-* Use `group_by` to summarize by a new feature of this data set not otherwise discussed in the tasks or objectives. What have you learned with these investigation?
+-   Use `group_by` to summarize by a new feature of this data set not otherwise discussed in the tasks or objectives. What have you learned with these investigation?
+
+```{r}
+## Bar plot with small, industry, and power means next to each other, not on top, add a legend
+daily |>
+  group_by(weekday = wday(date, label = TRUE)) |>
+  summarize(mean_consumption_small = mean(consumption_small, na.rm = TRUE),
+            mean_consumption_industry = mean(consumption_industry, na.rm = TRUE),
+            mean_consumption_power = mean(consumption_power, na.rm = TRUE)) |>
+  ggplot(aes(x = weekday)) +
+  geom_bar(aes(y = mean_consumption_industry), stat = "identity", position = position_stack(), fill = "red") +
+  geom_bar(aes(y = mean_consumption_small), stat = "identity", position = position_stack(), fill = "blue") +
+  geom_bar(aes(y = mean_consumption_power), stat = "identity", position = position_stack(), fill = "green") +
+  labs(title = "Mean Consumption by Weekday", x = "Weekday", y = "Mean Consumption")
+```
+> Looking at these data, we can see that mean household consumption (pictured in blue) stays nearly constant throughout every day of the week. Mean consumption for industry (pictured in red) is consistently the highest, but there are some notable decreases on Saturday and Sunday. Likewise, for power (pictured in green), with the smallest mean consumption, there are also decreases on Saturday and Sunday. This would make sense, as many businesses are closed on the weekends, and the steadiness of household consumption is expected as people are home all week.
 
 ### Objective 6
 
-* Based on your exploration of the data, suggest three questions that could be asked from these data or additional data that you can imagine. Be sure to explain why the previous plots or calculations indicates that this would be an interesting our useful exploration.
+-   Based on your exploration of the data, suggest three questions that could be asked from these data or additional data that you can imagine. Be sure to explain why the previous plots or calculations indicates that this would be an interesting our useful exploration.
 
 ### Objective 7
 
-* Write an abstract for your project. Briefly explain what you did, what you found, and why a potential reader should be interested in your research.
-
+-   Write an abstract for your project. Briefly explain what you did, what you found, and why a potential reader should be interested in your research.

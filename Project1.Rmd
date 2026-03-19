@@ -84,7 +84,7 @@ daily |>
 ### Year-month combination with lowest median consumption_power value
 daily |>
   group_by(year = year(date), month = month(date)) |>
-  summarize(median_consumption_power = median(consumption_power, na.rm = TRUE)) |>
+  summarize(median_consumption_power = median(consumption_power, na.rm = TRUE), .groups = "drop") |>
   arrange(median_consumption_power) |>
   slice(1)
 ```  

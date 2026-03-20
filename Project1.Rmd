@@ -98,19 +98,36 @@ gas_monthly <- gas |> mutate(month = floor_date(Date, "month"))
 
 ##Calculate "daily" means in monthly terms
 daily_mean <- daily_monthly |> group_by(month)|> summarise(
-   mean_consumption_small = mean(consumption_small, na.rm = TRUE),
-    mean_consumption_industry = mean(consumption_industry, na.rm = TRUE),
-    mean_consumption_power = mean(consumption_power, na.rm = TRUE)
+   households_idx = mean(price_households_idx, na.rm = TRUE),
+    industry_idx = mean(price_industry_idx, na.rm = TRUE)
 )
 
 ##Calculate "gas" means in monthly terms
-gas_mean <- gas_monthly |> group_by(month) |> summarise(mean_price = mean(Price, na.rm = TRUE))
+gas_mean <- gas_monthly |> group_by(month) |> summarise(ttf_price = mean(Price, na.rm = TRUE))
 
-##Plotting TTF Price, Not sure how to show both TTF price and the gas price indexes on
-##one graph because they are on two separate scales
-ggplot(gas_mean, aes(x = month, y = mean_price)) +
-  geom_line(color = "blue") +
-  labs(title = "Natural Gas Price TTf By Time", x = "Date", y = "Price (€/MWh)")
+##In order to index, we need the data to all follow the same months, this joins all the matching months
+matching_months <- daily_mean |> inner_join(gas_mean, by = "month") |> arrange(month)
+
+##To better fit the graph I use a scaling constant of 3
+scale_factor <- 3
+
+##Create one plot with both objects
+ggplot(matching_months, aes(x = month)) +
+  geom_line(aes(y = ttf_price, color = "TTF Price")) +
+  geom_line(aes(y = households_idx / scale_factor, color = "Households Index")) +
+  geom_line(aes(y = industry_idx / scale_factor, color = "Industry Index")) +
+  scale_y_continuous(
+    name = "TTF Price",
+##The line below is done to rescale the right axis labels in order for household and industry indexes to be accurate
+    sec.axis = sec_axis(~ . * scale_factor, name = "Price index (2015 = 100)")
+   ) +
+  scale_x_date(date_breaks = "3 months", date_labels = "%b %Y") +
+  scale_color_manual(values = c( "TTF Price" = "blue", "Households Index" = "red", "Industry Index" = "green")) +
+  labs(
+    title = "Natural Gas Price and Price Indexes",
+    x = "Date",
+    color = "Series"
+  ) + theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
 
 ```
@@ -491,3 +508,9 @@ We looked at the extreme right-skewed price spikes in the TTF market (Objective 
 ### Objective 7
 
 -   Write an abstract for your project. Briefly explain what you did, what you found, and why a potential reader should be interested in your research.
+
+> In this project, our research analyzes the natural gas consumption levels and prices in Germany during a 2022 period in which the country faced a severe energy crisis. To first explore the data, we broke it up and summarized it into consumption groups based on household consumption, industrial level consumption, and consumption coming from the entire power sector. We broke the data into monthly consumption levels and indexed time series in order to compare changes in natural gas consumption and price throughout this period. In doing this, our analysis showed that while natural gas prices experienced extreme volatility throughout the crisis, consumption of natural gas, specifically at the household level, remained relatively stable. This research suggests that this crisis brought on significant short-run responsiveness to price shocks. However, consumption at the industry level did show clear reductions, aligning with the rising prices of natural gas throughout the crisis.
+
+> Furthermore, we took a look at seasonal patterns in consumption and price, and created relationships between environmental variables such as temperature and solar radiation, which have significant influence on natural gas. The results we saw through analyzing these trends highlights the strong role that seasonal variability plays in household consumption and reinforced the importance of external conditions in shaping energy demand.
+
+> Overall, this project demonstrates that combining a number of data analysis techniques including time series, visualizations, and statistical summaries can provide significant insight into how different sectors of the economy respond to energy shocks during a time of crisis. It is important for anyone to understand these dynamics, but specifically for policymakers and those focused on energy consumption to be able to design a more resilient energy system during times of crisis. 
